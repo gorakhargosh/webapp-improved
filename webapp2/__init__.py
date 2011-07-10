@@ -50,6 +50,10 @@ except ImportError: # pragma: no cover
 
         run_wsgi_app = run_bare_wsgi_app = classmethod(_run)
 
+
+from webapp2.types import bytes
+
+
 __version_info__ = ('1', '8', '1')
 __version__ = '.'.join(__version_info__)
 
@@ -244,7 +248,7 @@ class Request(webob.Request):
                 data = urllib.urlencode(data)
             environ['wsgi.input'] = StringIO(data)
             environ['webob.is_body_seekable'] = True
-            environ['CONTENT_LENGTH'] = str(len(data))
+            environ['CONTENT_LENGTH'] = bytes(len(data))
             environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
 
         base = super(Request, cls).blank(path, environ=environ,
@@ -349,7 +353,7 @@ class Response(webob.Response):
         else:
             if isinstance(value, unicode):
                 # Status messages have to be ASCII safe, so this is OK.
-                value = str(value)
+                value = bytes(value)
 
             if not isinstance(value, str):
                 raise TypeError(
@@ -430,7 +434,7 @@ class Response(webob.Response):
         if (self.headers.get('Cache-Control') == 'no-cache' and
             not self.headers.get('Expires')):
             self.headers['Expires'] = 'Fri, 01 Jan 1990 00:00:00 GMT'
-            self.headers['Content-Length'] = str(len(self.body))
+            self.headers['Content-Length'] = bytes(len(self.body))
 
         write = start_response(self.status, self.headerlist)
         write(self.body)
@@ -981,7 +985,7 @@ class Route(BaseRoute):
                     name.strip('_'))
 
             if not isinstance(value, basestring):
-                value = str(value)
+                value = bytes(value)
 
             if not regex.match(value):
                 raise ValueError('URI buiding error: Value "%s" is not '
@@ -1650,7 +1654,7 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
     """
     if uri.startswith(('.', '/')):
         request = request or get_request()
-        uri = str(urljoin(request.url, uri))
+        uri = bytes(urljoin(request.url, uri))
 
     if code is None:
         if permanent:
