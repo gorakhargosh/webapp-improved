@@ -17,10 +17,10 @@ import os
 import webapp2
 
 try:
-    # Python 2.5
+    # Python 2.6
     bytes
 except Exception:
-    # Python 2.6 and above.
+    # Python 2.5
     bytes = str
 
 
