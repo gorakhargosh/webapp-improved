@@ -10,3 +10,5 @@
 # repository level.
 *.egg-info
 
+# Editor-specific files.
+.idea/
