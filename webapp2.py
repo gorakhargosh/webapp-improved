@@ -14,7 +14,13 @@ import cgi
 import logging
 import re
 import urllib
-import urlparse
+
+try:
+    # Python 3.
+    from urllib.parse import urljoin, urlunsplit
+except ImportError:
+    # Python 2.x
+    from urlparse import urljoin, urlunsplit
 
 import webob
 from webob import exc
@@ -1644,7 +1650,7 @@ def redirect(uri, permanent=False, abort=False, code=None, body=None,
     """
     if uri.startswith(('.', '/')):
         request = request or get_request()
-        uri = str(urlparse.urljoin(request.url, uri))
+        uri = str(urljoin(request.url, uri))
 
     if code is None:
         if permanent:
@@ -1772,7 +1778,7 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
     if fragment:
         fragment = urllib.quote(_to_utf8(fragment))
 
-    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+    return urlunsplit((scheme, netloc, path, query, fragment))
 
 
 def _get_handler_methods(handler):
