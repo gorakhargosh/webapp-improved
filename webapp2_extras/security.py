@@ -16,27 +16,45 @@ import os
 
 import webapp2
 
+try:
+    # Python 2.5
+    bytes
+except Exception:
+    # Python 2.6 and above.
+    bytes = str
 
-def create_token(bit_strength=64, decimal=False):
-    """Generates a random string with the specified bit strength.
+
+_BYTE_BASE_ENCODING_MAP = {
+    10: lambda value: bytes(int(binascii.b2a_hex(value), 16)),
+    16: binascii.b2a_hex,
+    64: lambda value: binascii.b2a_base64(value)[:-1]
+}
+def create_token(bit_strength=64, base=10):
+    """
+    Generates a random ASCII-encoded unsigned integral number in decimal,
+    hexadecimal, or Base-64 representation.
 
     :param bit_strength:
-        Bit strength. Must be a multiple of 8.
-    :param decimal:
-        If True, a decimal representation is returned, otherwise an
-        hexadecimal representation is returned.
+        Bit strength.
+    :param base:
+        One of:
+            1. 10 (default)
+            2. 16
+            3. 64
     :returns:
-        A random string with the specified bit strength.
+        A string representation of a randomly-generated ASCII-encoded
+        hexadecimal/decimal/base64-representation unsigned integral number
+        based on the bit strength specified.
     """
     if bit_strength % 8 or bit_strength <= 0:
         raise ValueError(
-            'This function expects a bit strength, got %r.' % bit_strength)
-
-    value = binascii.b2a_hex(os.urandom(bit_strength / 8))
-    if decimal:
-        value = bytes(int(value, 16))
-
-    return value
+            "This function expects a bit strength: got `%r`." % bit_strength)
+    random_bytes = os.urandom(bit_strength // 8)
+    try:
+        return _BYTE_BASE_ENCODING_MAP[base](random_bytes)
+    except KeyError:
+        raise ValueError(
+            "Base must be one of %r" % _BYTE_BASE_ENCODING_MAP.keys())
 
 
 def create_password_hash(password, method='sha1', bit_strength=64,

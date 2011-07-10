@@ -13,19 +13,21 @@ class TestSecurity(test_base.BaseTestCase):
         self.assertRaises(ValueError, security.create_token, 0)
         self.assertRaises(ValueError, security.create_token, -1)
 
-        token = security.create_token(16)
+        token = security.create_token(16, 16)
         self.assertTrue(re.match(r'^[a-f0-9]{4}$', token) is not None)
 
-        token = security.create_token(32)
+        token = security.create_token(16, 10)
+        self.assertTrue(int(token, 10) >= 0)
+
+        token = security.create_token(32, 16)
         self.assertTrue(re.match(r'^[a-f0-9]{8}$', token) is not None)
 
-        token = security.create_token(64)
+        token = security.create_token(64, 16)
         self.assertTrue(re.match(r'^[a-f0-9]{16}$', token) is not None)
 
-        token = security.create_token(128)
+        token = security.create_token(128, 16)
         self.assertTrue(re.match(r'^[a-f0-9]{32}$', token) is not None)
 
-        token = security.create_token(16, True)
 
     def test_create_check_password_hash(self):
         self.assertRaises(TypeError, security.create_password_hash, 'foo',
