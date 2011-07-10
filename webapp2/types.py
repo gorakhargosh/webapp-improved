@@ -24,6 +24,9 @@
 Type detection
 --------------
 .. autofunction:: is_sequence
+.. autofunction:: is_list
+.. autofunction:: is_tuple
+.. autofunction:: is_dict
 .. autofunction:: is_unicode
 .. autofunction:: is_bytes
 .. autofunction:: is_bytes_or_unicode
@@ -34,6 +37,9 @@ Type detection
 .. autofunction:: to_unicode_recursively
 """
 
+# Essentially, avoid using "str", "basestring", and "unicode".
+# Use these types instead. They're portable between Python versions.
+
 
 try:
     # Python 2.6 +
@@ -42,6 +48,7 @@ except Exception:
     # Python 2.5 does not have a built in bytes type.
     bytes = str
 
+# Python 3.x also removes "basestring" and "unicode"
 try:
     # Not Python3
     unicode_string = unicode
@@ -66,6 +73,42 @@ def is_sequence(value):
     except TypeError, exception:
         assert "is not iterable" in bytes(exception)
         return False
+
+
+def is_list(value):
+    """
+    Determines whether the given value is a list.
+
+    :param value:
+        The value to test.
+    :returns:
+        ``True`` if the value is a list instance; ``False`` otherwise.
+    """
+    return isinstance(value, list)
+
+
+def is_tuple(value):
+    """
+    Determines whether the given value is a tuple.
+
+    :param value:
+        The value to test.
+    :returns:
+        ``True`` if the value is a tuple instance; ``False`` otherwise.
+    """
+    return isinstance(value, tuple)
+
+
+def is_dict(value):
+    """
+    Determines whether the given value is a dict.
+
+    :param value:
+        The value to test.
+    :returns:
+        ``True`` if the value is a dict instance; ``False`` otherwise.
+    """
+    return isinstance(value, dict)
 
 
 def is_unicode(value):

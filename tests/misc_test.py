@@ -64,10 +64,10 @@ class TestMiscellaneous(test_base.BaseTestCase):
         self.assertRaises(AttributeError, webapp2.import_string, 'webob.dfasfasdfdsfsd')
 
     def test_to_utf8(self):
-        res = webapp2._to_utf8('ábcdéf'.decode('utf-8'))
+        res = webapp2.types.unicode_to_utf8('ábcdéf'.decode('utf-8'))
         self.assertEqual(isinstance(res, str), True)
 
-        res = webapp2._to_utf8('abcdef')
+        res = webapp2.types.unicode_to_utf8('abcdef')
         self.assertEqual(isinstance(res, str), True)
 
     '''

@@ -16,13 +16,7 @@ import os
 
 import webapp2
 
-try:
-    # Python 2.6
-    bytes
-except Exception:
-    # Python 2.5
-    bytes = str
-
+from webapp2.types import bytes, unicode_to_utf8
 
 _BYTE_BASE_ENCODING_MAP = {
     10: lambda value: bytes(int(binascii.b2a_hex(value), 16)),
@@ -134,7 +128,7 @@ def hash_password(password, method, salt=None, pepper=None):
 
     This function was ported and adapted from `Werkzeug`_.
     """
-    password = webapp2._to_utf8(password)
+    password = unicode_to_utf8(password)
     if method == 'plain':
         return password
 
@@ -143,12 +137,12 @@ def hash_password(password, method, salt=None, pepper=None):
         return None
 
     if salt:
-        h = hmac.new(webapp2._to_utf8(salt), password, method)
+        h = hmac.new(unicode_to_utf8(salt), password, method)
     else:
         h = method(password)
 
     if pepper:
-        h = hmac.new(webapp2._to_utf8(pepper), h.hexdigest(), method)
+        h = hmac.new(unicode_to_utf8(pepper), h.hexdigest(), method)
 
     return h.hexdigest()
 

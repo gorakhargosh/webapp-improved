@@ -50,9 +50,9 @@ except ImportError: # pragma: no cover
 
         run_wsgi_app = run_bare_wsgi_app = classmethod(_run)
 
-
-from webapp2.types import bytes
-
+from webapp2.types import \
+    bytes, is_bytes, is_bytes_or_unicode, bytes_to_unicode, \
+    is_unicode, is_list, is_tuple, is_dict, unicode_to_utf8, to_unicode_if_bytes, unicode_string
 
 __version_info__ = ('1', '8', '1')
 __version__ = '.'.join(__version_info__)
@@ -244,7 +244,7 @@ class Request(webob.Request):
             environ['REQUEST_METHOD'] = 'POST'
             if hasattr(data, 'items'):
                 data = data.items()
-            if not isinstance(data, str):
+            if not is_bytes(data):
                 data = urllib.urlencode(data)
             environ['wsgi.input'] = StringIO(data)
             environ['webob.is_body_seekable'] = True
@@ -336,10 +336,12 @@ class Response(webob.Response):
         """Appends a text to the response body."""
         # webapp uses StringIO as Response.out, so we need to convert anything
         # that is not str or unicode to string to keep same behavior.
-        if not isinstance(text, basestring):
-            text = unicode(text)
+        #if not is_bytes_or_unicode(text):
+        #    text = bytes(text)
+        if not is_bytes_or_unicode(text):
+            text = unicode_string(text)
 
-        if isinstance(text, unicode) and not self.charset:
+        if is_unicode(text) and not self.charset:
             self.charset = self.default_charset
 
         super(Response, self).write(text)
@@ -351,11 +353,11 @@ class Response(webob.Response):
         if isinstance(value, (int, long)):
             code = int(value)
         else:
-            if isinstance(value, unicode):
+            if is_unicode(value):
                 # Status messages have to be ASCII safe, so this is OK.
                 value = bytes(value)
 
-            if not isinstance(value, str):
+            if not is_bytes(value):
                 raise TypeError(
                     'You must set status to a string or integer (not %s)' %
                     type(value))
@@ -407,7 +409,7 @@ class Response(webob.Response):
     def _set_headers(self, value):
         if hasattr(value, 'items'):
             value = value.items()
-        elif not isinstance(value, list):
+        elif not is_list(value):
             raise TypeError('Response headers must be a list or dictionary.')
 
         self.headerlist = value
@@ -905,7 +907,7 @@ class Route(BaseRoute):
         self.defaults = defaults or {}
         self.methods = methods
         self.schemes = schemes
-        if isinstance(handler, basestring) and ':' in handler:
+        if is_bytes_or_unicode(handler) and ':' in handler:
             if handler_method:
                 raise ValueError(
                     "If handler_method is defined in a Route, handler "
@@ -984,7 +986,7 @@ class Route(BaseRoute):
                 raise KeyError('Missing argument "%s" to build URI.' % \
                     name.strip('_'))
 
-            if not isinstance(value, basestring):
+            if not is_bytes_or_unicode(value):
                 value = bytes(value)
 
             if not regex.match(value):
@@ -1102,7 +1104,7 @@ class Router(object):
             A :class:`Route` instance or, for compatibility with webapp, a
             tuple ``(regex, handler_class)``.
         """
-        if isinstance(route, tuple):
+        if is_tuple(route):
             # Exceptional compatibility case: route compatible with webapp.
             route = self.route_class(*route)
 
@@ -1234,7 +1236,7 @@ class Router(object):
 
         if route.handler_adapter is None:
             handler = route.handler
-            if isinstance(handler, basestring):
+            if is_bytes_or_unicode(handler):
                 if handler not in self.handlers:
                     self.handlers[handler] = handler = import_string(handler)
                 else:
@@ -1537,7 +1539,7 @@ class WSGIApplication(object):
 
         handler = self.error_handlers.get(code)
         if handler:
-            if isinstance(handler, basestring):
+            if is_bytes_or_unicode(handler):
                 self.error_handlers[code] = handler = import_string(handler)
 
             return handler(request, response, e)
@@ -1734,7 +1736,7 @@ def import_string(import_name, silent=False):
     :returns:
         The imported object.
     """
-    import_name = _to_utf8(import_name)
+    import_name = unicode_to_utf8(import_name)
     try:
         if '.' in import_name:
             module, obj = import_name.rsplit('.', 1)
@@ -1770,17 +1772,17 @@ def _urlunsplit(scheme=None, netloc=None, path=None, query=None,
         netloc = None
 
     if path:
-        path = urllib.quote(_to_utf8(path))
+        path = urllib.quote(unicode_to_utf8(path))
 
-    if query and not isinstance(query, basestring):
-        if isinstance(query, dict):
+    if query and not is_bytes_or_unicode(query):
+        if is_dict(query):
             query = query.iteritems()
 
         # Sort args: commonly needed to build signatures for services.
         query = urllib.urlencode(sorted(query))
 
     if fragment:
-        fragment = urllib.quote(_to_utf8(fragment))
+        fragment = urllib.quote(unicode_to_utf8(fragment))
 
     return urlunsplit((scheme, netloc, path, query, fragment))
 
@@ -1804,14 +1806,6 @@ def _get_handler_methods(handler):
 def _normalize_handler_method(method):
     """Transforms an HTTP method into a valid Python identifier."""
     return method.lower().replace('-', '_')
-
-
-def _to_utf8(value):
-    """Encodes a unicode value to UTF-8 if not yet encoded."""
-    if isinstance(value, str):
-        return value
-
-    return value.encode('utf-8')
 
 
 def _parse_route_template(template, default_sufix=''):
