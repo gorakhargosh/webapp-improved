@@ -13,7 +13,7 @@ import hmac
 import logging
 import time
 
-from webapp2_extras import json
+from webapp2_extras import escape as json
 from webapp2_extras import security
 
 

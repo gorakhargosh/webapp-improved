@@ -14,14 +14,30 @@ import urllib
 try:
     # Preference for installed library with updated fixes.
     import simplejson as json
+    json_loads = json.loads
+    json_dumps = json.dumps
 except ImportError: # pragma: no cover
     try:
         # Standard library module in Python >= 2.6.
+        # If you name this module as "json", this import
+        # will fail *always*. Therefore, this module has been renamed
+        # to "escape".
         import json
-    except ImportError:
+
+        # Stray modules from other libraries named "json" can cause
+        # "loads" or "dumps" attributes missing errors. For instance,
+        # all the JSON tests are failing on my machine with Python 2.7.
+        # We use the Python built-in json module only if it has the
+        # attributes we need. See tornado commit log.
+        assert hasattr(json, "loads") and hasattr(json, "dumps")
+        json_loads = json.loads
+        json_dumps = json.dumps
+    except Exception:
         try:
             # Google App Engine.
             from django.utils import simplejson as json
+            json_loads = json.loads
+            json_dumps = json.dumps
         except ImportError:
             raise RuntimeError(
                 'A JSON parser is required, e.g., simplejson at '
@@ -49,7 +65,7 @@ def encode(value, *args, **kwargs):
     # although python's standard library does not, so we do it here.
     # http://stackoverflow.com/questions/1580647/json-why-are-forward-slashes-escaped
     kwargs.setdefault('separators', (',', ':'))
-    return json.dumps(value, *args, **kwargs).replace("</", "<\\/")
+    return json_dumps(value, *args, **kwargs).replace("</", "<\\/")
 
 
 def decode(value, *args, **kwargs):
@@ -70,7 +86,7 @@ def decode(value, *args, **kwargs):
         value = value.decode('utf-8')
 
     assert isinstance(value, unicode)
-    return json.loads(value, *args, **kwargs)
+    return json_loads(value, *args, **kwargs)
 
 
 def b64encode(value, *args, **kwargs):

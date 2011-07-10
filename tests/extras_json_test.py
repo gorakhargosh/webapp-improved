@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from webapp2_extras import json
+
+from webapp2_extras import escape as json
 
 import test_base
 
